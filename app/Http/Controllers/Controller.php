@@ -2,52 +2,56 @@
 
 namespace App\Http\Controllers;
 
+use App\Repositories\DocumentRepository;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Laravel\Lumen\Routing\Controller as BaseController;
 
 class Controller extends BaseController
 {
-    public function getDocumentsAction(Request $request)
+    /** @var DocumentRepository */
+    private $documentRepository;
+
+    /**
+     * Controller constructor.
+     * @param DocumentRepository $documentRepository
+     */
+    public function __construct(DocumentRepository $documentRepository)
     {
-        $documents = DB::table('documents')->get();
-        return view('base', ['documents' => $documents]);
+        $this->documentRepository = $documentRepository;
     }
 
-    public function postDocumentAction(Request $request, Response $response) {
+    public function getDocumentsAction(Request $request)
+    {
+        return view('base', [
+            'documents' => $this->documentRepository->findAll()
+        ]);
+    }
 
-        $file = null;
-        $validMimeTypes = ['application/pdf', 'application/x-pdf'];
-        if ($request->hasFile('doc')) {
+    public function postDocumentAction(Request $request, Response $response)
+    {
+        try {
+            $this->validate($request, ['doc' => 'required|mimes:pdf']);
+        } catch (ValidationException $e) {
+            return $response->setContent([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ]);
+        }
+        $fileFromRequest = $request->file('doc');
+        $filename = uniqid('doc_' . time() . '_') . '.pdf';
+        $fileFromRequest->move('uploads', $filename);
 
-            $file = $request->file('doc');
-            if (in_array($file->getMimeType(), $validMimeTypes)) {
-
-                $filename = uniqid('doc_' . time() . '_') . '.pdf';
-                $file->move('uploads', $filename);
-
-                DB::table('documents')->insert([
-                    'title' => $filename,
-                    'file_path' => realpath('uploads' . DIRECTORY_SEPARATOR . $filename),
-                    'file_url' => 'uploads' . DIRECTORY_SEPARATOR . $filename
-                ]);
-
-                return $response->setContent([
-                    'status' => 'ok',
-                    'message' => 'file successfully uploaded'
-                ]);
-            }
-            else {
-                return $response->setContent([
-                    'status' => 'error',
-                    'message' => 'upload a valid PDF document'
-                ]);
-            }
+        if ($this->documentRepository->saveFile($filename) === true) {
+            return $response->setContent([
+                'status' => 'ok',
+                'message' => 'file successfully uploaded'
+            ]);
         }
         return $response->setContent([
             'status' => 'fail',
-            'message' => 'file not sent'
+            'message' => 'something went wrong'
         ]);
     }
 }
