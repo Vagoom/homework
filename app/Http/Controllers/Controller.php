@@ -2,56 +2,50 @@
 
 namespace App\Http\Controllers;
 
-use App\Repositories\DocumentRepository;
+use App\Exceptions\DatabaseException;
+use App\Models\Document;
+use App\Services\DocumentService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Validation\ValidationException;
 use Laravel\Lumen\Routing\Controller as BaseController;
+use Symfony\Component\HttpFoundation\File\Exception\FileException;
 
 class Controller extends BaseController
 {
-    /** @var DocumentRepository */
-    private $documentRepository;
+    /** @var DocumentService */
+    private $documentService;
 
     /**
      * Controller constructor.
-     * @param DocumentRepository $documentRepository
+     * @param DocumentService $documentService
      */
-    public function __construct(DocumentRepository $documentRepository)
+    public function __construct(DocumentService $documentService)
     {
-        $this->documentRepository = $documentRepository;
+        $this->documentService = $documentService;
     }
 
     public function getDocumentsAction(Request $request)
     {
-        return view('base', [
-            'documents' => $this->documentRepository->findAll()
-        ]);
+        return view('base', ['documents' => Document::all()]);
     }
 
     public function postDocumentAction(Request $request, Response $response)
     {
         try {
-            $this->validate($request, ['doc' => 'required|mimes:pdf']);
-        } catch (ValidationException $e) {
+            $this->validate($request, [Document::FILE_FORM_FIELD => 'required|mimes:pdf']);
+            $this->documentService->uploadDocument($request->file(Document::FILE_FORM_FIELD));
+
+            return $response->setContent([
+                'status' => 'ok',
+                'message' => 'file successfully uploaded'
+            ]);
+
+        } catch (ValidationException | FileException | DatabaseException $e) {
             return $response->setContent([
                 'status' => 'error',
                 'message' => $e->getMessage()
             ]);
         }
-        $fileFromRequest = $request->file('doc');
-        $filename = uniqid('doc_' . time() . '_') . '.pdf';
-        $fileFromRequest->move('uploads', $filename);
-
-        if ($this->documentRepository->saveFile($filename) === true) {
-            return $response->setContent([
-                'status' => 'ok',
-                'message' => 'file successfully uploaded'
-            ]);
-        }
-        return $response->setContent([
-            'status' => 'fail',
-            'message' => 'something went wrong'
-        ]);
     }
 }

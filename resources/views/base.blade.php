@@ -20,7 +20,7 @@
     <body>
         <h1>Documents</h1>
         <form method="post" action="{{ url('/upload') }}" enctype="multipart/form-data">
-            <input type="file" name="doc">
+            <input type="file" name="{{ \App\Models\Document::FILE_FORM_FIELD }}">
             <input type="submit" value="Add new document">
         </form>
         <div class="thumbnail-container">
@@ -31,9 +31,6 @@
                 </div>
             @endforeach
         </div>
-
-
-
 
 
         <script>

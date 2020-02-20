@@ -4,27 +4,27 @@
 namespace App\Repositories;
 
 
-use Illuminate\Support\Facades\DB;
+use App\Exceptions\DatabaseException;
+use App\Models\Document;
 
 class DocumentRepository
 {
-    const UPLOAD_FOLDER = 'uploads';
-
-    public function findAll()
-    {
-        return DB::table('documents')->get();
-    }
-
     /**
      * @param string $filename
-     * @return bool
+     * @param string $filePath
+     * @param string $fileUrl
+     * @throws DatabaseException
      */
-    public function saveFile($filename)
+    public function saveFileInfo($filename, $filePath, $fileUrl)
     {
-        return DB::table('documents')->insert([
-            'title' => $filename,
-            'file_path' => realpath(self::UPLOAD_FOLDER . DIRECTORY_SEPARATOR . $filename),
-            'file_url' => self::UPLOAD_FOLDER . DIRECTORY_SEPARATOR . $filename
-        ]);
+        $document = new Document();
+        $document->title = $filename;
+        $document->file_path = $filePath;
+        $document->file_url = $fileUrl;
+
+        $success = $document->save();
+        if ($success === false) {
+            throw new DatabaseException('File info not saved');
+        }
     }
 }

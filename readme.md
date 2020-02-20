@@ -22,7 +22,7 @@ The Lumen framework is open-sourced software licensed under the [MIT license](ht
 
 ## How to run app
 
-App can was developed using this tools:
+App was developed using this tools:
 
 1. Ubuntu 18.04
 2. PHP 7.2
