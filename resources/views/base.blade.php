@@ -4,16 +4,21 @@
         <style>
             .thumbnail-container {
                 display: flex;
-                justify-content: space-between;
                 flex-wrap: wrap;
             }
             .thumbnail-container > div {
-                width: 23.33%;
+                width: 22%;
                 border: 1px dotted black;
                 padding: 3px;
-                margin-bottom: 3px;
+                margin-left: 2%;
+                margin-bottom: 2%;
                 word-break: break-word;
 
+            }
+            .pagination {
+                display: flex;
+                justify-content: center;
+                list-style-type: none;
             }
         </style>
     </head>
@@ -26,14 +31,43 @@
         <div class="thumbnail-container">
             @foreach ($documents as $doc)
                 <div data-id={{ $doc->id }}>
-                    <p><strong>Title:</strong> {{ $doc->title }}</p>
-                    <a href="{{ $doc->file_url }}">Download file</a>
+                    <h5>Title:</h5>
+                    <p>{{ $doc->title }}</p>
+                    <a href="{{ $doc->file_url }}" target="_blank">Download file</a>
                 </div>
             @endforeach
         </div>
+        {{ $documents->links() }}
 
-
+        <script
+            src="https://code.jquery.com/jquery-3.4.1.min.js"
+            integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+            crossorigin="anonymous">
+        </script>
         <script>
+
+            $("form").submit(function(event) {
+                event.preventDefault();
+
+                $.ajax({
+                    url         : $(this).attr( "action" ),
+                    data        : new FormData($(this)[0]),
+                    cache       : false,
+                    contentType : false,
+                    processData : false,
+                    type        : 'POST',
+                    success     : function(response) {
+                        // console.log(response);
+
+                        var child = $(".thumbnail-container").children(":first").clone();
+                        child.attr('data-id', response.docId);
+                        child.find("p").text(response.docTitle);
+                        child.find("a").attr('href', response.docUrl);
+
+                        $(".thumbnail-container").append(child);
+                    }
+                });
+            });
 
         </script>
     </body>

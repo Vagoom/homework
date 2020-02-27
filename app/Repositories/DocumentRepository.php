@@ -13,6 +13,7 @@ class DocumentRepository
      * @param string $filename
      * @param string $filePath
      * @param string $fileUrl
+     * @return Document
      * @throws DatabaseException
      */
     public function saveFileInfo($filename, $filePath, $fileUrl)
@@ -26,5 +27,6 @@ class DocumentRepository
         if ($success === false) {
             throw new DatabaseException('File info not saved');
         }
+        return $document;
     }
 }

@@ -27,19 +27,16 @@ class Controller extends BaseController
 
     public function getDocumentsAction(Request $request)
     {
-        return view('base', ['documents' => Document::all()]);
+        return view('base', ['documents' => Document::paginate(20)]);
     }
 
     public function postDocumentAction(Request $request, Response $response)
     {
         try {
             $this->validate($request, [Document::FILE_FORM_FIELD => 'required|mimes:pdf']);
-            $this->documentService->uploadDocument($request->file(Document::FILE_FORM_FIELD));
+            $savedDocument = $this->documentService->uploadDocument($request->file(Document::FILE_FORM_FIELD));
 
-            return $response->setContent([
-                'status' => 'ok',
-                'message' => 'file successfully uploaded'
-            ]);
+            return $response->setContent($this->documentService->buildResponseBody($savedDocument));
 
         } catch (ValidationException | FileException | DatabaseException $e) {
             return $response->setContent([

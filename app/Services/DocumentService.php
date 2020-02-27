@@ -5,6 +5,7 @@ namespace App\Services;
 
 
 use App\Exceptions\DatabaseException;
+use App\Models\Document;
 use App\Repositories\DocumentRepository;
 use Illuminate\Http\UploadedFile;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
@@ -27,6 +28,7 @@ class DocumentService
 
     /**
      * @param UploadedFile $doc
+     * @return Document
      * @throws DatabaseException
      * @throws FileException
      */
@@ -34,10 +36,25 @@ class DocumentService
     {
         $filename = uniqid('doc_' . time() . '_') . '.pdf';
         $doc->move(self::UPLOAD_FOLDER, $filename);
-        $this->documentRepository->saveFileInfo(
+        return $this->documentRepository->saveFileInfo(
             $filename,
             realpath(self::UPLOAD_FOLDER . DIRECTORY_SEPARATOR . $filename),
             self::UPLOAD_FOLDER . DIRECTORY_SEPARATOR . $filename
         );
+    }
+
+    /**
+     * @param Document $document
+     * @return array
+     */
+    public function buildResponseBody(Document $document)
+    {
+        return [
+            'status' => 'ok',
+            'message' => 'file successfully uploaded',
+            'docId' => $document->id,
+            'docTitle' => $document->title,
+            'docUrl' => $document->file_url
+        ];
     }
 }
