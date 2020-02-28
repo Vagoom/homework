@@ -16,7 +16,7 @@ class DocumentRepository
      * @return Document
      * @throws DatabaseException
      */
-    public function saveFileInfo($filename, $filePath, $fileUrl)
+    public function saveFileInfo(string $filename, string $filePath, string $fileUrl): Document
     {
         $document = new Document();
         $document->title = $filename;

@@ -8,6 +8,7 @@ use App\Services\DocumentService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Validation\ValidationException;
+use Illuminate\View\View;
 use Laravel\Lumen\Routing\Controller as BaseController;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
 
@@ -25,11 +26,20 @@ class Controller extends BaseController
         $this->documentService = $documentService;
     }
 
+    /**
+     * @param Request $request
+     * @return View
+     */
     public function getDocumentsAction(Request $request)
     {
         return view('base', ['documents' => Document::paginate(20)]);
     }
 
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return Response
+     */
     public function postDocumentAction(Request $request, Response $response)
     {
         try {
@@ -38,11 +48,16 @@ class Controller extends BaseController
 
             return $response->setContent($this->documentService->buildResponseBody($savedDocument));
 
-        } catch (ValidationException | FileException | DatabaseException $e) {
+        } catch (FileException | DatabaseException $e) {
+            return $response->setContent([
+                'status' => 'fail',
+                'message' => $e->getMessage()
+            ])->setStatusCode(Response::HTTP_INTERNAL_SERVER_ERROR);
+        } catch (ValidationException $e) {
             return $response->setContent([
                 'status' => 'error',
                 'message' => $e->getMessage()
-            ]);
+            ])->setStatusCode(Response::HTTP_BAD_REQUEST);
         }
     }
 }

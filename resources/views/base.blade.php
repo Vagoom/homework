@@ -49,9 +49,10 @@
             $("form").submit(function(event) {
                 event.preventDefault();
 
+                var form = $(this);
                 $.ajax({
-                    url         : $(this).attr( "action" ),
-                    data        : new FormData($(this)[0]),
+                    url         : form.attr( "action" ),
+                    data        : new FormData(form[0]),
                     cache       : false,
                     contentType : false,
                     processData : false,
@@ -59,12 +60,15 @@
                     success     : function(response) {
                         // console.log(response);
 
-                        var child = $(".thumbnail-container").children(":first").clone();
-                        child.attr('data-id', response.docId);
-                        child.find("p").text(response.docTitle);
-                        child.find("a").attr('href', response.docUrl);
-
-                        $(".thumbnail-container").append(child);
+                        if (response.status === 'ok') {
+                            var child = $(".thumbnail-container").children(":first").clone();
+                            child.attr('data-id', response.docId);
+                            child.find("p").text(response.docTitle);
+                            child.find("a").attr('href', response.docUrl);
+                            $(".thumbnail-container").append(child);
+                            // clear file input
+                            form.find('input[type="file"]').val(null);
+                        }
                     }
                 });
             });

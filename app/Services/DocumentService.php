@@ -32,10 +32,11 @@ class DocumentService
      * @throws DatabaseException
      * @throws FileException
      */
-    public function uploadDocument(UploadedFile $doc)
+    public function uploadDocument(UploadedFile $doc): Document
     {
         $filename = uniqid('doc_' . time() . '_') . '.pdf';
         $doc->move(self::UPLOAD_FOLDER, $filename);
+
         return $this->documentRepository->saveFileInfo(
             $filename,
             realpath(self::UPLOAD_FOLDER . DIRECTORY_SEPARATOR . $filename),
@@ -47,7 +48,7 @@ class DocumentService
      * @param Document $document
      * @return array
      */
-    public function buildResponseBody(Document $document)
+    public function buildResponseBody(Document $document): array
     {
         return [
             'status' => 'ok',
